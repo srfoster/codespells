@@ -50,7 +50,7 @@
     (if (> percent-complete (+ 1 last-percent-complete))
         (begin
           (printf "World download progress: ~a%\n"
-                (~r (max percent-complete 100)
+                (~r (min percent-complete 100)
                     #:precision 2))
           (listen-for-progress in percent-complete total-metabytes))
         (listen-for-progress in last-percent-complete total-metabytes))

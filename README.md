@@ -20,7 +20,7 @@ Put the following in a file called `main.rkt`.
 
 (once-upon-a-time
   #:world  (demo-world)
-  #:aether (aether-world))
+  #:aether (demo-aether))
 ```
 
 Run: `racket main.rkt`

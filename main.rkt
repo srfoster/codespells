@@ -1,11 +1,11 @@
-#lang racket
+#lang at-exp racket
 
 (provide once-upon-a-time
          demo-aether
-         demo-world
-         (all-from-out racket))
+         current-file-name ;helps with simple mods
+         (all-from-out racket codespells-server codespells-runes codespells/demo-aether))
 
-(require codespells/demo-aether)
+(require codespells/demo-aether codespells-runes)
 
 (module reader syntax/module-reader
   codespells/main)
@@ -21,7 +21,8 @@
     (loop)))
 
 
-
+(define-syntax (current-file-name stx)
+  #`#,(syntax-source stx))
 
 (define (dl from to size-in-megabytes)
   (local-require net/url)
@@ -61,6 +62,31 @@
 
 
 
+;TODO: Probably time to move this world stuff to a new file, if not a codespells-worlds repo
+; Essentially a new module evolving below this line...
+
+(provide demo-world spawn-mod-blueprint)
+
+(require racket/runtime-path
+         codespells-server
+         codespells-server/unreal-client)
+
+(define-runtime-path js-runtime "./js/on-start.js")
+
+(define (spawn-mod-blueprint mod-folder
+                             mod-name
+                             blueprint-name)
+  (unreal-eval-js
+   @~a{
+       var C = functions.bpFromMod("@(string-replace (path->string mod-folder)
+                                                     "\\"
+                                                     "\\\\")/",
+                                   "@mod-name",
+                                   "@blueprint-name")
+
+       var o = new C(GWorld,{X:@(current-x), Y:@(current-z), Z:@(current-y)},
+                            {Roll:@(current-roll), Pitch:@(current-pitch), Yaw:@(current-yaw)})
+   }))
 
 (define (demo-world)
   (local-require file/unzip net/sendurl)
@@ -69,8 +95,7 @@
 
   (define world-installation-source "https://codespells-org.s3.amazonaws.com/WorldTemplates/demo-world/0.0/CodeSpellsDemoWorld.zip")
   (define world-installation-target (build-path (current-directory) "CodeSpellsDemoWorld"))
-
-  
+ 
   (lambda ()
     (displayln "Starting Demo World") 
 
@@ -84,11 +109,20 @@
     (when (not (directory-exists? world-installation-target))
       (displayln "Unzipping")
       (unzip (build-path (current-directory) "CodeSpellsDemoWorld.zip")))
-    
+
+    (copy-file js-runtime
+               (build-path (current-directory)
+                           "CodeSpellsDemoWorld"
+                           "CodeSpellsDemoWorld"
+                           "Content"
+                           "Scripts"
+                           "on-start.js")
+               #t)
 
     (displayln "Running exe") ;Assume Windows for now
 
     (thread (thunk (system (~a (build-path world-installation-target "CodeSpellsDemoWorld.exe")))))
+
 
     ))
 

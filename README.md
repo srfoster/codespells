@@ -54,14 +54,22 @@ Now, when you run this, you should have a new Rune on your surface.  Wrapping th
 
 Of course, you'll notice that the `teleport` Rune has disappeared!  It's common that you'll want to combine mods from various places, assembling all of their Runes into your surface.  Here's how you can make the new mod play nicely with the Rune that ships with the core `codespells` package.
 
-Essentially, we need to create a new Rune language that combines the one with `teleport` and the one with `my-cool-particles`,
+Essentially, we need to create a new Rune language that combines the language with `teleport` and the language with `my-cool-particles`.  A Rune language is basically:
+
+1) A Racket module name -- which tells Racket where to find definitions for identifiers like `teleport` and `my-cool-particles`.
+2) A list of pairings from identifiers to Rune images -- like `teleport` to the Rune image with the concentric green circles, and `my-cool-particles` to the Rune image with the purple geometric pattern, etc.
+
+Thus, there are two parts to combining two existing Rune languages.  First, we need a Racket module name.  We'll come back to that.
+
+Second, we need to append together all of the identifier->image pairings.  That's the easy part.  You can just use `append-rune-langs` for that.  See below.
 
 ```
 #lang codespells
 
-(require codespells-demo-mod)
 (provide (all-from-out codespells-demo-mod)
          teleport)
+(require codespells-demo-mod)
+
 
 (define modded-lang
   (append-rune-langs #:name (current-file-name) 
@@ -74,19 +82,56 @@ Essentially, we need to create a new Rune language that combines the one with `t
    #:world  (demo-world))
 ```
 
-The new language appends together the one provided by `codespells-demo-mod` and the one used by default in the `demo-aether`.   I don't want to overwhelm anyone by doing a deep dive into the Racket module system.  But here's the basic idea:
+Notice that the name of the language (the Racket module that provides definitions for identifiers) is `(current-file-name)`.  As long as the current file provides definitions for all of the Runes (which it does; see the `provide`), this is a suitable "name" for the Rune language.  I don't want to overwhelm anyone by doing a deep dive into the Racket module system.  But here's the basic idea:
 
-We need to tell the new Rune language where the definitions of `teleport` (defined in `codespells`) and the definition of `my-cool-particles` (defined in `codespells-demo-mod`) are.  But they are in two different places! 
+ We provide `teleport` and everything from `codespells-demo-mod`.  So now its **as if** `"main.rkt"` contained the definitions for both.  
 
-So we create use the module (in this case the file) we are in `main.rkt` as a place to combine them both.  We provide `teleport` and everything from `codespells-demo-mod`.  So now its **as if** this file contained the definitions for both.  Then we use `(current-file-name)` for the `#:name` parameter of `append-rune-langs`.  So now, the Rune language knows where to go to look for the definitions when it evaluates your code.
+There are other ways to do it, but this is one of the simplest if you want to keep your modded CodeSpells configuration to one file.  This same strategy will let you combine together any number of mods.  Basically just: Assemble one big combo Rune language out of the ones provided by various mod packages; pass that new language to the aether (e.g. `(demo-aether #:lang COMBO-LANGUAGE)`); and make sure your Rune language's name references a Racket module that reprovides the definitions from the mods you're comboing together.
 
-There are other ways to do it, but this is one of the simplest if you want to keep your modded CodeSpells configuration to one file.  This same strategy will let you combine together any number of mods.  Basically just: Assemble one big Rune language out of the ones provided by the mod packages; give that language to `(demo-aether)`; and make sure your current module reprovides the definitions from the mods you're importing.
+There's one other neat thing you can do: Not only can you combine together two other mods, you can also **release** that combo as a new mod.  The file above can be altered as follows:
 
+```
+#lang codespells
 
+(provide (all-from-out codespells-demo-mod)
+         teleport
+         modded-lang ;Provide the combined Rune language
+         )
+         
+(require codespells-demo-mod)
 
+(define modded-lang
+  (append-rune-langs #:name (current-file-name) 
+                     (demo-aether-lang)
+                     (codespells-demo-mod-lang)))
 
+(module+ main ;Wrap once-upon-a-time, so it doesn't run when other people require your mod
+  (once-upon-a-time
+    #:aether (demo-aether #:lang modded-lang)
+    #:world  (demo-world)))
+```
 
+Now, this file -- just like `codespells-demo-mod` -- is providing a Rune language.  And we wrapped up the `once-upon-a-time` call in `(module+ main ...)` -- which means the 3D world will only launch if you execute this file directly, not if you `require` it as a library.
 
+Let's say you packaged up this file in a Racket package called `my-combo-mod`.  It can be easily installed now with this configuration:
+
+```
+#lang codespells
+
+(require my-combo-mod)
+
+(once-upon-a-time
+  #:world  (demo-world)
+  #:aether (demo-aether #:lang modded-lang))
+```
+
+Notice how similar this configuration is to the one earlier where we installed `codespells-demo-mod`?  The point is that mods are just Racket packages, so they can depend on each other.  Yet, a mod is a mod -- so you install it the same way regardless of its dependencies on other mods.
+
+And as a user of a mod, you don't have to know about what mods your installed mod depends on.  You can even specify version specific mod dependencies in your mod package's `info.rkt` file.  (I won't do a tutorial here.  Anyone who has dealt with `npm`, `pip`, `maven`, or any language's packaging system should be able to figure out how Racket's system works.  Same idea.)
+
+# Coming soon
+
+A more detailed tutorial about how to make/release a mod.  (Currently, you'll have to copy `codespells-demo-mod` and make guesses about how I produced the `.pak` file in Unreal.)  I also want to make tools that make modding **much** more streamlined.  
 
 
 

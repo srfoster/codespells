@@ -54,7 +54,7 @@ Now, when you run this, you should have a new Rune on your surface.  Wrapping th
 
 Of course, you'll notice that the `teleport` Rune has disappeared!  It's common that you'll want to combine mods from various places, assembling all of their Runes into your surface.  Here's how you can make the new mod play nicely with the Rune that ships with the core `codespells` package.
 
-Essentially, we need to create a new Rune language that combines the 
+Essentially, we need to create a new Rune language that combines the one with `teleport` and the one with `my-cool-particles`,
 
 ```
 #lang codespells

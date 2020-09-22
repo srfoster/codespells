@@ -12,22 +12,9 @@ functions.bpFromMod = function(dir,mod_name,blueprint_name){
 
                            var ret = ml.ClassFromMod(dir,mod_name,blueprint_name)
 
-                           console.log("class?",ret)
-                           console.log("keys?",Object.keys(ret))
-                           console.log("Class?", ret.Class)
-                           console.log("Class()?", ret.Class())
-                           console.log("Avatar class?", Root.ResolveClass('Avatar'))
-
                            class BP extends ret.Class {}
 
-                           console.log("ModLoader?", ModLoader)
-                           console.log("BP?", BP)
-
-                           console.log("particles?",ParticleSystem.Load('/CodeSpellsParticles/P_PurpleFire'))
-
                            let ret_C = require('uclass')()(global,BP)
-
-                           console.log("ret_C", ret_C)
 
                            ml.DestroyActor() //Maybe should keep it around and cache it?
 

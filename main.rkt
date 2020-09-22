@@ -3,12 +3,18 @@
 (provide once-upon-a-time
          demo-aether
          current-file-name ;helps with simple mods
-         (all-from-out racket codespells-server codespells-runes codespells/demo-aether))
+         codespells-workspace
+         (all-from-out racket
+                       codespells-server
+                       codespells-server/unreal-client
+                       codespells-runes codespells/demo-aether))
 
 (require codespells/demo-aether codespells-runes)
 
 (module reader syntax/module-reader
   codespells/main)
+
+
 
 (define (once-upon-a-time #:aether aether #:world world)
   (displayln "Starting World and Aether")
@@ -76,7 +82,7 @@
 (define (spawn-mod-blueprint mod-folder
                              mod-name
                              blueprint-name)
-  (unreal-eval-js
+  (unreal-js
    @~a{
        var C = functions.bpFromMod("@(string-replace (path->string mod-folder)
                                                      "\\"
@@ -88,30 +94,32 @@
                             {Roll:@(current-roll), Pitch:@(current-pitch), Yaw:@(current-yaw)})
    }))
 
+(define codespells-workspace (make-parameter (current-directory)))
+
 (define (demo-world)
   (local-require file/unzip net/sendurl)
 
   ;TODO: Once there's another world we want to release, extract all this into a more general world downloader function
 
   (define world-installation-source "https://codespells-org.s3.amazonaws.com/WorldTemplates/demo-world/0.0/CodeSpellsDemoWorld.zip")
-  (define world-installation-target (build-path (current-directory) "CodeSpellsDemoWorld"))
+  (define world-installation-target (build-path (codespells-workspace) "CodeSpellsDemoWorld"))
  
   (lambda ()
     (displayln "Starting Demo World") 
 
-    (when (not (file-exists? (build-path (current-directory) "CodeSpellsDemoWorld.zip")))
+    (when (not (file-exists? (build-path (codespells-workspace) "CodeSpellsDemoWorld.zip")))
       (displayln "Downloading world zip file...")
       (dl world-installation-source
-        (build-path (current-directory) "CodeSpellsDemoWorld.zip")
+        (build-path (codespells-workspace) "CodeSpellsDemoWorld.zip")
         560 ;It's about 558.8 Megabytes, I think
         ))
 
     (when (not (directory-exists? world-installation-target))
       (displayln "Unzipping")
-      (unzip (build-path (current-directory) "CodeSpellsDemoWorld.zip")))
+      (unzip (build-path (codespells-workspace) "CodeSpellsDemoWorld.zip")))
 
     (copy-file js-runtime
-               (build-path (current-directory)
+               (build-path (codespells-workspace)
                            "CodeSpellsDemoWorld"
                            "CodeSpellsDemoWorld"
                            "Content"
@@ -119,10 +127,91 @@
                            "on-start.js")
                #t)
 
-    (displayln "Running exe") ;Assume Windows for now
+    (define exe (~a (build-path world-installation-target "CodeSpellsDemoWorld.exe")))
+    (displayln (~a "Running " exe)) ;Assume Windows for now
 
-    (thread (thunk (system (~a (build-path world-installation-target "CodeSpellsDemoWorld.exe")))))
+    (thread (thunk (system exe)))
 
 
     ))
+
+
+
+;Another module shaping up here
+
+(provide define-classic-rune
+         define-classic-rune-lang
+         spawn-this-mod-blueprint
+         (all-from-out 2htdp/image))
+
+(require racket/runtime-path
+         syntax/parse/define
+         (for-syntax racket/syntax racket/path)
+         2htdp/image)
+
+(define-syntax (define-classic-rune stx)
+  (syntax-parse stx
+    [(_ (name args ...) #:background bg #:foreground fg lines ...)
+     #:with name-rune (format-id stx "~a-rune" #'name)
+     #:with name-rune-binding (format-id stx "~a-rune-binding" #'name)
+     #`(begin
+         (provide name)
+         
+         (define (name args ...)
+           lines ...)
+
+         (define (name-rune)
+           (svg-rune-description
+            (rune-background
+             #:color bg
+             (rune-image fg))))
+
+         (define name-rune-binding
+           (html-rune 'name (name-rune)))
+         )]))
+
+(define-syntax (define-classic-rune-lang stx)
+  (syntax-parse stx
+    [(_ name (rune-names ...))
+     #:with rune-bindings (map (lambda (n) (format-id stx "~a-rune-binding" n))
+                               (syntax->list #'(rune-names ...))) ;(format-id stx "~a-rune-binding" 'hello)
+     #`(begin
+         (provide name)
+         (define (name #:with-paren-runes? [with-paren-runes? #f])
+           (local-require codespells-runes)
+           (rune-lang #,(syntax-source stx)
+                      (rune-list #:with-paren-runes? with-paren-runes?
+                              
+                                 #,@#'rune-bindings
+                                 ))))]))
+
+
+
+(require (for-syntax codespells/modding/lib racket/format))
+
+(define-for-syntax (this-unreal-mod-location stx)
+  (build-path (path-only (syntax-source stx))
+                  "BuildUnreal"
+                  "WindowsNoEditor"
+                  (~a (racket-id->unreal-id
+                       (find-pkg-root-dir (path-only (syntax-source stx)))))
+                  "Content"
+                  "Paks"))
+
+(define-for-syntax (this-unreal-mod-name stx)
+  (~a (racket-id->unreal-id
+           (find-pkg-root-dir (path-only (syntax-source stx))))))
+
+
+;TODO: Could check at compile time that this BP exists...
+;  Could tell them what to do in the Unreal project...
+                       
+(define-syntax (spawn-this-mod-blueprint stx)
+  (syntax-parse stx
+    [(_ name)
+     #`(spawn-mod-blueprint
+        #,(this-unreal-mod-location stx)
+        #,(this-unreal-mod-name stx)
+        name)
+     ]))
 

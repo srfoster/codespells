@@ -6,3 +6,7 @@
 (define pkg-desc "Description Here")
 (define version "0.0")
 (define pkg-authors '(ThoughtSTEM))
+
+(define raco-commands
+  '(("codespells" codespells/modding/new-mod
+                  "Creates a new CodeSpells mod" 100)))

@@ -2,7 +2,7 @@ codespells
 ==========
 
 A very early-stage release of CodeSpells.  Features are, as yet, minimal (compared to what you may have seen on the YouTube channel and blog).
-Only works on Windows, for now. 
+Only works on Windows, for now.
 
 # Quick Installation
 
@@ -72,7 +72,7 @@ Second, we need to append together all of the identifier->image pairings.  That'
 
 
 (define modded-lang
-  (append-rune-langs #:name (current-file-name) 
+  (append-rune-langs #:name (current-file-name)
                      (demo-aether-lang)
                      (codespells-demo-mod-lang)))
 
@@ -97,11 +97,11 @@ There's one other neat thing you can do: Not only can you combine together two o
          teleport
          modded-lang ;Provide the combined Rune language
          )
-         
+
 (require codespells-demo-mod)
 
 (define modded-lang
-  (append-rune-langs #:name (current-file-name) 
+  (append-rune-langs #:name (current-file-name)
                      (demo-aether-lang)
                      (codespells-demo-mod-lang)))
 
@@ -129,10 +129,59 @@ Notice how similar this configuration is to the one earlier where we installed `
 
 And as a user of a mod, you don't have to know about what mods your installed mod depends on.  You can even specify version specific mod dependencies in your mod package's `info.rkt` file.  (I won't do a tutorial here.  Anyone who has dealt with `npm`, `pip`, `maven`, or any language's packaging system should be able to figure out how Racket's system works.  Same idea.)
 
+# Create Your Own Mod
+
+Suppose we want a mod called `my-mod`
+
+`raco codespells new my-mod`
+
+Now open `my-mod/main.rkt` in DrRacket or an editor of your choice.  You'll see
+that the following code was generated for you:
+
+```
+#lang codespells
+
+(define-classic-rune (hello)
+  #:background "blue"
+  #:foreground (circle 40 'solid 'blue)
+  (spawn-this-mod-blueprint "HelloWorld"))
+
+(define-classic-rune-lang my-mod-lang
+  (hello))
+
+(module+ main
+  (codespells-workspace ;TODO: Change this to your local workspace if different
+   (build-path (current-directory) ".." "CodeSpellsWorkspace"))
+
+  (once-upon-a-time
+   #:world (demo-world)
+   #:aether (demo-aether
+             #:lang (my-mod-lang #:with-paren-runes? #t))))
+```
+
+This is some minimal code that takes care of some of the details of setting up a mod for you:
+
+1) Defines and provides a function called `hello`
+2) Defines a Rune that compiles to `hello`
+3) Creates a Rune language containing the `hello` Rune, and provides it
+4) Configures the Rune language to look for the definition of `hello` in this file
+5) Gives you some `(module+ main ...)` code so you can test your mod prior to releasing it.
+6) Gives you a place to change the appearance or behavior of the `hello` Rune.
+
+It default to being a Rune that spawns an Unreal Blueprint packaged with this mod.  
+
+All you need to do now is:
+
+* Open `my-mod/Unreal/MyMod/MyMod.uproject` in Unreal
+* Put a Blueprint name `HelloWorld` in the `MyMod` Plugin Content folder
+* Do `File > Package Project > Windows (64-bit)`
+
+Now run `main.rkt` and you should get a demo world with a modded Aether containing
+you Rune.  Casting the spell `(hello)` should spawn your `HelloWorld` blueprint!
+
 # Coming soon
 
-A more detailed tutorial about how to make/release a mod.  (Currently, you'll have to copy `codespells-demo-mod` and make guesses about how I produced the `.pak` file in Unreal.)  I also want to make tools that make modding **much** more streamlined.  
+More documentation/tutorials about
 
-
-
-
+* What else you can do in the 3D word (aside from just spawning in Blueprints)
+* What else you can do with your mod's Rune language (aside from simple expressions like `(hello)`)

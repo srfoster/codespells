@@ -84,6 +84,12 @@ All you need to do now is:
 Now run `main.rkt` and you should get a demo world with a modded Aether containing
 you Rune.  Casting the spell `(hello)` should spawn your `HelloWorld` blueprint!
 
+# Installing Mods
+
+Installing a Mod is as simple as requiring a Racket package and altering your Aether prior to launching the game:
+
+https://github.com/srfoster/codespells/wiki/Mod-Installation-and-Mod-Basics
+
 # Coming soon
 
 More documentation/tutorials about

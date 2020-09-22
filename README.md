@@ -38,7 +38,7 @@ If all that works, either:
 
 Suppose we want a mod called `my-mod`
 
-`raco codespells new my-mod`
+`raco codespells my-mod`
 
 Now open `my-mod/main.rkt` in DrRacket or an editor of your choice.  You'll see
 that the following code was generated for you:

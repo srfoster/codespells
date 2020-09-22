@@ -73,7 +73,7 @@ This is some minimal code that takes care of some of the details of setting up a
 5) Gives you some `(module+ main ...)` code so you can test your mod prior to releasing it.
 6) Gives you a place to change the appearance or behavior of the `hello` Rune.
 
-It default to being a Rune that spawns an Unreal Blueprint packaged with this mod.  
+It defaults to being a Rune that spawns an Unreal Blueprint called `HelloWorld` packaged with this mod.  
 
 All you need to do now is:
 
@@ -83,6 +83,8 @@ All you need to do now is:
 
 Now run `main.rkt` and you should get a demo world with a modded Aether containing
 you Rune.  Casting the spell `(hello)` should spawn your `HelloWorld` blueprint!
+
+You should be able to push your mod to github for others to install.
 
 # Installing Mods
 

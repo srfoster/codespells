@@ -1,6 +1,7 @@
 #lang at-exp racket
 
 (provide demo-aether
+         setup-demo-aether
          demo-aether-lang
          teleport)
 

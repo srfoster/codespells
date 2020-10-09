@@ -97,37 +97,51 @@
 (define codespells-workspace (make-parameter (current-directory)))
 
 (define (demo-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/demo-world/0.0/CodeSpellsDemoWorld.zip"
+   "CodeSpellsDemoWorld"
+   560 ;It's about 558.8 Megabytes, I think
+   ))
+
+;TODO: Move to new package
+(provide voxel-world)
+(define (voxel-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/voxel-world/0.0/VoxelWorld.zip"
+   "VoxelWorld"
+   606))
+
+(define (fetch-and-run-world world-installation-source world-name size-in-mb)
   (local-require file/unzip net/sendurl)
 
-  ;TODO: Once there's another world we want to release, extract all this into a more general world downloader function
-
-  (define world-installation-source "https://codespells-org.s3.amazonaws.com/WorldTemplates/demo-world/0.0/CodeSpellsDemoWorld.zip")
-  (define world-installation-target (build-path (codespells-workspace) "CodeSpellsDemoWorld"))
+  (define zip-file-name (last (string-split world-installation-source "/")))
+  (define world-installation-target (build-path (codespells-workspace) world-name))
  
   (lambda ()
-    (displayln "Starting Demo World") 
+    (displayln (~a "Starting World: " world-name)) 
 
-    (when (not (file-exists? (build-path (codespells-workspace) "CodeSpellsDemoWorld.zip")))
+    (when (not (file-exists? (build-path (codespells-workspace) zip-file-name)))
       (displayln "Downloading world zip file...")
       (dl world-installation-source
-        (build-path (codespells-workspace) "CodeSpellsDemoWorld.zip")
-        560 ;It's about 558.8 Megabytes, I think
+        (build-path (codespells-workspace) zip-file-name)
+        size-in-mb
         ))
 
     (when (not (directory-exists? world-installation-target))
       (displayln "Unzipping")
-      (unzip (build-path (codespells-workspace) "CodeSpellsDemoWorld.zip")))
+      (unzip (build-path (codespells-workspace) zip-file-name)))
 
     (copy-file js-runtime
                (build-path (codespells-workspace)
-                           "CodeSpellsDemoWorld"
-                           "CodeSpellsDemoWorld"
+                           world-name
+                           world-name
                            "Content"
                            "Scripts"
                            "on-start.js")
                #t)
 
-    (define exe (~a (build-path world-installation-target "CodeSpellsDemoWorld.exe")))
+    (define exe (~a (build-path world-installation-target (~a world-name ".exe" )
+                                )))
     (displayln (~a "Running " exe)) ;Assume Windows for now
 
     (thread (thunk (system exe)))

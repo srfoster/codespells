@@ -71,7 +71,7 @@
 ;TODO: Probably time to move this world stuff to a new file, if not a codespells-worlds repo
 ; Essentially a new module evolving below this line...
 
-(provide demo-world spawn-mod-blueprint)
+(provide demo-world spawn-mod-blueprint log)
 
 (require racket/runtime-path
          codespells-server
@@ -84,6 +84,7 @@
                              blueprint-name)
   (unreal-js
    @~a{
+       (function(){
        var C = functions.bpFromMod("@(string-replace (path->string mod-folder)
                                                      "\\"
                                                      "\\\\")/",
@@ -92,7 +93,24 @@
 
        var o = new C(GWorld,{X:@(current-x), Y:@(current-z), Z:@(current-y)},
                             {Roll:@(current-roll), Pitch:@(current-pitch), Yaw:@(current-yaw)})
+
+       return o
+       })()
    }))
+
+
+(define (log s) ; Could also just pipe in the Unreal logs, might be more useful...
+  @unreal-js{
+    (function(){
+    let request = require('request')
+    return request("POST","http://localhost:8081/eval-spell?lang=racket&spell=(displayln \""+@|s|+"\")", {})
+    })()      
+ })
+
+
+
+
+
 
 (define codespells-workspace (make-parameter (current-directory)))
 
@@ -129,7 +147,10 @@
 
     (when (not (directory-exists? world-installation-target))
       (displayln "Unzipping")
-      (unzip (build-path (codespells-workspace) zip-file-name)))
+      (unzip (build-path (codespells-workspace) zip-file-name))
+      (rename-file-or-directory
+       (build-path (current-directory) world-name)
+       world-installation-target) )
 
     (copy-file js-runtime
                (build-path (codespells-workspace)
@@ -160,18 +181,20 @@
 
 (require racket/runtime-path
          syntax/parse/define
-         (for-syntax racket/syntax racket/path)
+         (for-syntax racket/syntax racket/path racket/list)
          2htdp/image)
 
 (define-syntax (define-classic-rune stx)
   (syntax-parse stx
-    [(_ (name args ...) #:background bg #:foreground fg lines ...)
+    [(_ head #:background bg #:foreground fg lines ...)
+     #:with name (car (syntax-e #'head))
      #:with name-rune (format-id stx "~a-rune" #'name)
      #:with name-rune-binding (format-id stx "~a-rune-binding" #'name)
+
      #`(begin
          (provide name)
          
-         (define (name args ...)
+         (define head
            lines ...)
 
          (define (name-rune)

@@ -71,7 +71,7 @@
 ;TODO: Probably time to move this world stuff to a new file, if not a codespells-worlds repo
 ; Essentially a new module evolving below this line...
 
-(provide demo-world spawn-mod-blueprint log)
+(provide demo-world spawn-mod-blueprint )
 
 (require racket/runtime-path
          codespells-server
@@ -99,6 +99,7 @@
    }))
 
 
+#; ;Just retaining as example of requests from JS. Not useful as a log.  Move elsewhere
 (define (log s) ; Could also just pipe in the Unreal logs, might be more useful...
   @unreal-js{
     (function(){

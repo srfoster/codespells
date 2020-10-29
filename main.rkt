@@ -1,5 +1,6 @@
 #lang at-exp racket
 
+
 (provide once-upon-a-time
          demo-aether
          current-file-name ;helps with simple mods
@@ -129,6 +130,21 @@
    "VoxelWorld"
    606))
 
+;TODO: Move to new package
+(provide cave-world)
+(define (cave-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/cave-world/0.0/CaveWorld.zip"
+   "CaveWorld"
+   606))
+
+(provide arena-world)
+(define (arena-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/arena-world/0.0/ArenaWorld.zip"
+   "ArenaWorld"
+   1400))
+
 (define (fetch-and-run-world world-installation-source world-name size-in-mb)
   (local-require file/unzip net/sendurl)
 
@@ -138,7 +154,9 @@
   (lambda ()
     (displayln (~a "Starting World: " world-name)) 
 
-    (when (not (file-exists? (build-path (codespells-workspace) zip-file-name)))
+    (when (and
+           (not (file-exists? (build-path (codespells-workspace) zip-file-name)))
+           (not (directory-exists? world-installation-target)))
       (displayln "Downloading world zip file...")
       (dl world-installation-source
         (build-path (codespells-workspace) zip-file-name)

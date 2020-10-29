@@ -31,6 +31,10 @@
 (define-syntax (current-file-name stx)
   #`#,(syntax-source stx))
 
+
+;Should move dl to utility (outside of CodeSpells)
+
+(provide dl)
 (define (dl from to size-in-megabytes)
   (local-require net/url)
 
@@ -42,8 +46,7 @@
   
   (copy-port in out)
   
-  (close-output-port out)
-  )
+  (close-output-port out))
 
 (define (listen-for-progress in last-percent-complete total-metabytes)
   (sync (port-progress-evt in))
@@ -72,7 +75,7 @@
 ;TODO: Probably time to move this world stuff to a new file, if not a codespells-worlds repo
 ; Essentially a new module evolving below this line...
 
-(provide demo-world spawn-mod-blueprint log)
+(provide demo-world spawn-mod-blueprint )
 
 (require racket/runtime-path
          codespells-server
@@ -100,6 +103,7 @@
    }))
 
 
+#; ;Just retaining as example of requests from JS. Not useful as a log.  Move elsewhere
 (define (log s) ; Could also just pipe in the Unreal logs, might be more useful...
   @unreal-js{
     (function(){

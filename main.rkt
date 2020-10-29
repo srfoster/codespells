@@ -30,6 +30,10 @@
 (define-syntax (current-file-name stx)
   #`#,(syntax-source stx))
 
+
+;Should move dl to utility (outside of CodeSpells)
+
+(provide dl)
 (define (dl from to size-in-megabytes)
   (local-require net/url)
 
@@ -41,8 +45,7 @@
   
   (copy-port in out)
   
-  (close-output-port out)
-  )
+  (close-output-port out))
 
 (define (listen-for-progress in last-percent-complete total-metabytes)
   (sync (port-progress-evt in))

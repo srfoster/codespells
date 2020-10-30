@@ -7,14 +7,21 @@
          aws/s3
          setup/getinfo)
 
+(define skip-zip? (make-parameter #f))
+
+(command-line
+   #:program (short-program+command-name)
+   #:once-each
+   [("-z" "--skip-zip") "Skip zipping BuildUnreal/"
+                        (skip-zip? #t)])
+
 ;Zip BuildUnreal
 
-#|
-(displayln "Zipping BuildUnreal")
-(when (file-exists? "BuildUnreal.zip")
-  (delete-file "BuildUnreal.zip"))
-(zip "BuildUnreal.zip" "BuildUnreal")
-|#
+(when (not (skip-zip?))
+  (displayln "Zipping BuildUnreal")
+  (when (file-exists? "BuildUnreal.zip")
+    (delete-file "BuildUnreal.zip"))
+  (zip "BuildUnreal.zip" "BuildUnreal"))
 
 ;Find S3 credentials
 
@@ -22,12 +29,21 @@
 (aws-cli-credentials (build-path (find-system-path 'home-dir) ".awscreds"))
 (credentials-from-file!)
 
-
 (define info (get-info/full (current-directory)))
 
-(put/file (info 'release-s3-bucket) ;I guess we assume the region for now
-          (build-path "BuildUnreal.zip")
-          )
+(define (url->bucket+path url)
+  ;Assuming a url like: "https://codespells-org.s3.amazonaws.com/ModBuilds/fire-particles/0.0/BuildUnreal.zip"
+  (define parts (string-split url "."))
+  (define http://bucket-name (first parts))
+  (define bucket-name (last (string-split http://bucket-name "/")))
+
+  (define path (last (string-split url ".com")))
+
+  (string-append bucket-name path))
+
+
+(put/file (url->bucket+path (info 'release-url)) ;I guess we assume the region for now
+          (build-path "BuildUnreal.zip"))
 
 ;Push BuildUnreal.zip to s3
 

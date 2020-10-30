@@ -65,9 +65,6 @@
                     #:precision 2))
           (listen-for-progress in percent-complete total-metabytes))
         (listen-for-progress in last-percent-complete total-metabytes))
-    
-    
-    
     ))
 
 
@@ -162,6 +159,7 @@
            (not (file-exists? (build-path (codespells-workspace) zip-file-name)))
            (not (directory-exists? world-installation-target)))
       (displayln "Downloading world zip file...")
+
       (dl world-installation-source
         (build-path (codespells-workspace) zip-file-name)
         size-in-mb

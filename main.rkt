@@ -35,7 +35,15 @@
 ;Should move dl to utility (outside of CodeSpells)
 
 (provide dl)
-(define (dl from to size-in-megabytes)
+
+(define (find-dl-size url)
+  (local-require net/http-easy)
+
+  (/
+   (string->number (bytes->string/utf-8 (response-headers-ref (head url) 'Content-Length)))
+   1000000))
+
+(define (dl from to [size-in-megabytes (find-dl-size from)])
   (local-require net/url)
 
   (define the-url (string->url from))

@@ -91,6 +91,9 @@
 (define-runtime-path demo-main.rkt
   "test-mod-main.rkt")
 
+(define-runtime-path demo-mod-info.rkt
+  "mod-info.rkt")
+
 (define (make-demo-racket-code #:root [root (current-directory)] mod-name)
   (copy-file demo-main.rkt
              (build-path root "main.rkt")
@@ -106,7 +109,7 @@
    "test-mod"
    (~a mod-name))
 
-  (copy-file "test-mod-info.rkt"
+  (copy-file demo-mod-info.rkt
              (build-path root "mod-info.rkt")
              #t)
 

@@ -222,7 +222,7 @@
      #:with name-rune-binding (format-id stx "~a-rune-binding" #'name)
 
      #`(begin
-         (provide name)
+         (provide name name-rune)
          
          (define head
            lines ...)

@@ -8,13 +8,15 @@
          (all-from-out racket
                        codespells-server
                        codespells-server/unreal-client
-                       codespells-runes codespells/demo-aether))
+                       codespells-runes codespells/demo-aether)
+         define-runtime-path
+         #%module-begin)
 
-(require codespells/demo-aether codespells-runes)
+(require codespells/demo-aether codespells-runes
+         (rename-in racket [#%module-begin #%old-module-begin]))
 
 (module reader syntax/module-reader
   codespells/main)
-
 
 
 (define (once-upon-a-time #:aether aether #:world world)
@@ -28,8 +30,7 @@
     (loop)))
 
 
-(define-syntax (current-file-name stx)
-  #`#,(syntax-source stx))
+
 
 
 ;Should move dl to utility (outside of CodeSpells)
@@ -72,11 +73,7 @@
                 (~r (min percent-complete 100)
                     #:precision 2))
           (listen-for-progress in percent-complete total-metabytes))
-        (listen-for-progress in last-percent-complete total-metabytes))
-    
-    
-    
-    ))
+        (listen-for-progress in last-percent-complete total-metabytes))))
 
 
 
@@ -91,9 +88,12 @@
 
 (define-runtime-path js-runtime "./js/on-start.js")
 
+
+
 (define (spawn-mod-blueprint mod-folder
                              mod-name
                              blueprint-name)
+  (displayln (~a "Loading BP from" mod-folder))
   (unreal-js
    @~a{
        (function(){
@@ -170,6 +170,7 @@
            (not (file-exists? (build-path (codespells-workspace) zip-file-name)))
            (not (directory-exists? world-installation-target)))
       (displayln "Downloading world zip file...")
+
       (dl world-installation-source
         (build-path (codespells-workspace) zip-file-name)
         size-in-mb
@@ -239,14 +240,14 @@
 
 (define-syntax (define-classic-rune-lang stx)
   (syntax-parse stx
-    [(_ name (rune-names ...))
+    [(_ name #:eval-from eval-from (rune-names ...))
      #:with rune-bindings (map (lambda (n) (format-id stx "~a-rune-binding" n))
                                (syntax->list #'(rune-names ...))) ;(format-id stx "~a-rune-binding" 'hello)
      #`(begin
          (provide name)
          (define (name #:with-paren-runes? [with-paren-runes? #f])
            (local-require codespells-runes)
-           (rune-lang #,(syntax-source stx)
+           (rune-lang eval-from ;#,(syntax-source stx)
                       (rune-list #:with-paren-runes? with-paren-runes?
                               
                                  #,@#'rune-bindings
@@ -257,6 +258,7 @@
 (require (for-syntax codespells/modding/lib racket/format))
 
 (define-for-syntax (this-unreal-mod-location stx)
+  ;Hmmm.   This doesn't work when we do `raco exe`, still references the old path
   (build-path (path-only (syntax-source stx))
                   "BuildUnreal"
                   "WindowsNoEditor"
@@ -272,13 +274,74 @@
 
 ;TODO: Could check at compile time that this BP exists...
 ;  Could tell them what to do in the Unreal project...
+
+
+(define-syntax (#%module-begin stx)
+  (syntax-parse stx
+    [(_ things ...)
+     #`(#%old-module-begin
+
+        things ...
+        )]))
                        
 (define-syntax (spawn-this-mod-blueprint stx)
   (syntax-parse stx
     [(_ name)
+
+     
+     #`(spawn-mod-blueprint
+        #,(datum->syntax stx 'MyPak)
+        #,(datum->syntax stx 'mod-name)
+        name)
+
+     #;
      #`(spawn-mod-blueprint
         #,(this-unreal-mod-location stx)
         #,(this-unreal-mod-name stx)
         name)
      ]))
+
+(define-syntax (current-file-name stx)
+
+  (datum->syntax stx 'main.rkt)
+
+  #;
+  #`#,(syntax-source stx))
+
+
+(provide require-mod)
+(require syntax/parse/define
+         (for-syntax racket/syntax))
+(define-syntax (require-mod stx)
+  (syntax-parse stx
+    [(_ name)
+     #:with name: (format-id stx "~a:" #'name)
+     #'(begin
+         (provide (all-from-out name))
+
+         (require
+           (prefix-in name: (only-in name my-mod-lang))
+           (except-in name my-mod-lang)))]))
+
+
+(provide mod)
+(define-syntax (mod stx)
+  (syntax-parse stx
+    [(mod the-mod-name
+          #:pak-folder
+          pak-folder-name)
+     #`(begin
+         (module mod-info racket
+           (define mod-name "MyMod")
+           ;(define-runtime-path main.rkt "main.rkt")
+           ;(define-runtime-path MyPak pak-folder-name)
+           )
+         (require 'mod-info)
+         )
+     #;
+     (datum->syntax stx `(begin
+                           (define mod-name ,(syntax->datum #'the-mod-name))
+                           (define-runtime-path main.rkt "main.rkt")
+                           (define-runtime-path MyPak ,(syntax->datum #'pak-folder-name))
+                           ))]))
 

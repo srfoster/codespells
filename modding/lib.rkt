@@ -67,27 +67,59 @@
    (build-path unreal-project-directory "Plugins" (~a name) (~a name ".uplugin"))
    #t)
 
-  (define DefaultGame.ini
-    (file->string
-     (build-path unreal-project-directory "Config" "DefaultGame.ini")))
 
-  (define new-DefaultGame.ini
-    (string-replace DefaultGame.ini "TestMod" (~a name)))
+  (replace-in-file
+   (build-path unreal-project-directory "Config" "DefaultGame.ini")
+   "TestMod"
+   (~a name)))
+
+(define (replace-in-file file find replace)
+    
+  (define the-file-string
+    (file->string
+     file))
+
+  (define new-file-string
+    (string-replace the-file-string find replace))
 
   (with-output-to-file #:exists 'replace
-    (build-path unreal-project-directory "Config" "DefaultGame.ini")
+    file
     (thunk*
-     (displayln new-DefaultGame.ini))))
+     (displayln new-file-string))))
 
 
 (define-runtime-path demo-main.rkt
   "test-mod-main.rkt")
+
+(define-runtime-path demo-mod-info.rkt
+  "test-mod-info.rkt")
 
 (define (make-demo-racket-code #:root [root (current-directory)] mod-name)
   (copy-file demo-main.rkt
              (build-path root "main.rkt")
              #t)
 
-  ;TODO: Fix TestMod -> upcase mod-name
-  ;  Actually, just infer based on the enclosing folder, or pkg name, or a global var...
+  (replace-in-file
+   (build-path root "main.rkt")
+   "TestMod"
+   (~a (racket-id->unreal-id mod-name)))
+
+  (replace-in-file
+   (build-path root "main.rkt")
+   "test-mod"
+   (~a mod-name))
+
+  (copy-file demo-mod-info.rkt
+             (build-path root "mod-info.rkt")
+             #t)
+
+  (replace-in-file
+   (build-path root "mod-info.rkt")
+   "TestMod"
+   (~a (racket-id->unreal-id mod-name)))
+
+  (replace-in-file
+   (build-path root "mod-info.rkt")
+   "test-mod"
+   (~a mod-name))
   )

@@ -1,11 +1,13 @@
 #lang codespells
 
+(require test-mod/mod-info)
+
 (define-classic-rune (hello)
   #:background "blue"
   #:foreground (circle 40 'solid 'blue)
-  (spawn-this-mod-blueprint "HelloWorld"))
+  (spawn-mod-blueprint pak-folder mod-name "HelloWorld"))
 
-(define-classic-rune-lang my-mod-lang
+(define-classic-rune-lang my-mod-lang #:eval-from main.rkt
   (hello))
 
 (module+ main

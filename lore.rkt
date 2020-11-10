@@ -3,8 +3,9 @@
 (require website-js)
 
 (provide link-to-collection
-	 rune-collection-listing
-	 rune-collection-name->preview-card )
+         rune-collection-listing
+         rune-collection-name->preview-card 
+         rune-collection-name->preview-icon)  
 
 (define (link-to-collection name [content name])
   (a href: 
@@ -28,7 +29,6 @@
   (define module-name/lore (string->symbol
 			     (~a module-name "/lore")))
 
-
   (define name 
     (dynamic-require module-name/lore 'name))
 
@@ -37,3 +37,15 @@
 
   (rune-collection-listing (name) 
 			   (preview-image)))
+
+(define (rune-collection-name->preview-icon module-name)
+  (define module-name/lore (string->symbol
+			     (~a module-name "/lore")))
+
+  (define name 
+    (dynamic-require module-name/lore 'name))
+
+  (define preview-image 
+    (dynamic-require module-name/lore 'preview-image))
+
+  (link-to-collection (name) (preview-image)))

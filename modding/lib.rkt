@@ -94,32 +94,38 @@
 (define-runtime-path demo-mod-info.rkt
   "test-mod-info.rkt")
 
-(define (make-demo-racket-code #:root [root (current-directory)] mod-name)
-  (copy-file demo-main.rkt
-             (build-path root "main.rkt")
-             #t)
+(define-runtime-path demo-lore.rkt
+  "test-mod-lore.rkt")
+
+(define (copy-file-with-replacements from to mod-name)
+
+  (copy-file from to #t)
 
   (replace-in-file
-   (build-path root "main.rkt")
+    to
    "TestMod"
    (~a (racket-id->unreal-id mod-name)))
 
   (replace-in-file
-   (build-path root "main.rkt")
-   "test-mod"
-   (~a mod-name))
-
-  (copy-file demo-mod-info.rkt
-             (build-path root "mod-info.rkt")
-             #t)
-
-  (replace-in-file
-   (build-path root "mod-info.rkt")
-   "TestMod"
-   (~a (racket-id->unreal-id mod-name)))
-
-  (replace-in-file
-   (build-path root "mod-info.rkt")
+   to
    "test-mod"
    (~a mod-name))
   )
+
+(define (make-demo-racket-code #:root [root (current-directory)] mod-name)
+
+  (copy-file-with-replacements 
+    demo-main.rkt
+    (build-path root "main.rkt")
+    mod-name)
+
+  (copy-file-with-replacements 
+    demo-mod-info.rkt
+    (build-path root "mod-info.rkt")
+    mod-name)
+
+  (copy-file-with-replacements 
+    demo-lore.rkt
+    (build-path root "lore.rkt")
+    mod-name))
+

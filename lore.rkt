@@ -59,7 +59,18 @@
 (provide link-to-collection
          rune-collection-listing
          rune-collection-name->preview-card 
-         rune-collection-name->preview-icon)  
+         rune-collection-name->preview-icon
+	 lore->name-slug
+	 )  
+
+(define (lore->name-slug lore)
+  (string-replace 
+    (string-downcase (cond 
+		       [(authored-work-lore? lore)
+			(authored-work-lore-name lore)]
+		       [(rune-collection-lore? lore)
+			(rune-collection-lore-name lore)]))
+    " " "-"))
 
 (define (link-to-collection name [content name])
   (a href: 
@@ -177,7 +188,7 @@
 		 #'(let ()
 		     (define preview-image
 		       (authored-work-lore-preview-image lore))
-		     (page (list "builds" 
+		     (page (list "works" 
 				 (~a 'prefix) 
 				 "preview.png")
 			   preview-image))
@@ -199,7 +210,7 @@
     (build-card (h3 name) 
 		(img class: "card-img-top"
 		     src: (~a 
-			    "builds/" (~a pkg-name)
+			    "works/" (lore->name-slug lore)
 			    "/preview.png"))
 		(accordion-card #:header "Read More..."
 				(h5 "Rune Collections")
@@ -235,7 +246,7 @@
                      (build-card (h3 name) 
 				 (img class: "card-img-top"
 				      src: (~a 
-					     "builds/" 'prefix"/preview.png"))
+					     "works/" 'prefix"/preview.png"))
 				 (accordion-card #:header "Read More..."
 				   (h5 "Rune Collections")
 				   (map 

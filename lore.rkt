@@ -8,11 +8,16 @@
 	 (struct-out rune-collection-lore)
 	 (struct-out authored-work-lore)
 	 define-authored-work-lore
-	 define-rune-collection-lore)
+	 define-rune-collection-lore
+	 
+	 dynamic-require-lore)
 
 (require website-js racket/runtime-path)
 
 ;Underlying structures for lore (aka documentation)
+
+(define (dynamic-require-lore pkg-name)
+  (dynamic-require (string->symbol (~a pkg-name "/lore")) 'lore))
  
 (struct rune-lore            (name description rune) #:transparent)
 (struct rune-collection-lore (name description preview-image rune-lores) #:transparent)
@@ -101,12 +106,39 @@
 	 (for-syntax racket/syntax
 		     racket/format))
 
-(provide rune-collection-page
-	 build->build-card
-	 build->preview-image-page
-	 build-card
-	 download-button
-	 coming-soon)
+(provide 
+  authored-work-lore->preview-image/page 
+  authored-work-lore->authored-work-card
+  rune-collection-lore->rune-collection/page
+
+  rune-collection-page
+  build->build-card
+  build->preview-image-page
+  build-card
+  download-button
+  coming-soon)
+
+(define (rune-collection-lore->rune-collection/page
+	  path
+	  lore
+	  [wrapper identity])
+  (page (identity path)
+	(wrapper
+	  (container
+	    (h1 (rune-collection-lore-name lore))
+	    (rune-collection-lore-description  lore)
+	    (map
+	      (lambda (r)
+		;Firsts and seconds
+		; are gross...
+		;  Some kind of rune info struct (along with collection info and build info)
+		(card (card-header
+			(rune-lore-rune r)
+			(h3 (rune-lore-name r)))
+		      (card-body
+			(rune-lore-description r))))
+	      (rune-collection-lore-rune-lores lore))))))
+
 
 (define-syntax (rune-collection-page stx)
   (syntax-parse stx
@@ -129,6 +161,13 @@
 				     (rune-lore-description r))))
 			       (rune-collection-lore-rune-lores lore)))))]))
 
+(define (authored-work-lore->preview-image/page path lore)
+  (let ()
+    (define preview-image
+      (authored-work-lore-preview-image lore))
+    (page (identity path)  
+	  preview-image)))
+
 ;Maybe not macro?
 ; Get rid of prefix nonsense.  Maybe Lore->Page func
 (define-syntax (build->preview-image-page stx)
@@ -143,6 +182,38 @@
 				 "preview.png")
 			   preview-image))
 		 ]))
+
+
+
+(define (authored-work-lore->authored-work-card pkg-name lore)
+  (let ()
+    (define name 
+      (authored-work-lore-name lore))
+    (define description
+      (authored-work-lore-description lore))
+    (define rune-collections
+      (authored-work-lore-rune-collection-names lore))
+    (define preview-image
+      (authored-work-lore-preview-image lore))
+
+    (build-card (h3 name) 
+		(img class: "card-img-top"
+		     src: (~a 
+			    "builds/" (~a pkg-name)
+			    "/preview.png"))
+		(accordion-card #:header "Read More..."
+				(h5 "Rune Collections")
+				(map 
+				  rune-collection-name->preview-icon 
+				  rune-collections)
+				(br)
+				description
+				)
+
+		(hr)
+
+		;Change on s3
+		(download-button (~a pkg-name)))))
 
 ;Call authored work?
 (define-syntax (build->build-card stx)

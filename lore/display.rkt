@@ -13,11 +13,12 @@
 ;  might be useful in the 'fire-particles package,
 ;  (like the rune language, etc.)
 
-(provide rune-collection-name->preview-card 
+(provide rune-collection-name->rune-collection-card 
 	 rune-collection-name->preview-icon
-	 authored-work-name->preview-image/page 
-	 authored-work-name->authored-work-card
+         rune-collection-name->preview-image/page
 	 rune-collection-name->rune-collection/page
+         authored-work-name->preview-image/page 
+	 authored-work-name->authored-work-card
 	 lore->name-slug
 
 	 authored-work-card
@@ -47,27 +48,30 @@
      content))
 
 
-;Nice to have a card that contains a link to the
-;  Rune Collection's fulll page
-(define (rune-collection-preview-card name preview)
-  (card 
-    (card-header
-      (link-to-collection name))
-    (card-body
-      preview)))
-
-
 ;Generate a rune collection preview card from the name
-(define (rune-collection-name->preview-card module-name)
+(define (rune-collection-name->rune-collection-card 
+          #:preview-img-path path
+          module-name)
   (define module-name/lore (string->symbol
 			     (~a module-name "/lore")))
 
   (define lore 
     (dynamic-require module-name/lore 'lore))
 
-  (rune-collection-preview-card 
-    (rune-collection-lore-name lore) 
-    (rune-collection-lore-preview-image lore)))
+  (define name 
+    (rune-collection-lore-name lore))
+  
+  (define preview
+    (rune-collection-lore-preview-image lore))
+
+  (card 
+    (card-header
+      (img class: "card-img-top"
+           src: path))   
+    (card-body
+      (link-to-collection name) 
+      ))
+  )
 
 
 ;Sometimes you don't want a full card, just an icon
@@ -80,7 +84,9 @@
     (dynamic-require module-name/lore 'lore))
 
   (link-to-collection (rune-collection-lore-name lore) 
-		      (rune-collection-lore-preview-image lore)))
+                      (img src: (~a "collections/" (lore->name-slug lore) "/preview.png")
+                           width: 50
+                           )))
 
 
 ;Constructs the full page that you can (render #:to "wherever")
@@ -109,19 +115,28 @@
 ;  but in this case "page" is the image file (e.g. the png).
 ;  In `website` "page" just means file.
 (define (authored-work-name->preview-image/page authored-work-name #:path path )
-  (let ()
-    (define lore (dynamic-require-lore authored-work-name))
+  (define lore (dynamic-require-lore authored-work-name))
 
-    (define preview-image
-      (authored-work-lore-preview-image lore))
-    (page (identity path)  
-	  preview-image)))
+  (define preview-image
+    (authored-work-lore-preview-image lore))
+  (page (string-split path "/")  
+        preview-image))
+
+(define (rune-collection-name->preview-image/page rune-collection-name #:path path )
+  (define lore (dynamic-require-lore rune-collection-name))
+
+  (define preview-image
+    (rune-collection-lore-preview-image lore))
+  (page (string-split path "/")  
+        preview-image))
 
 ;A card for an authored work.  Currently,
 ;  we don't have full pages for authored works.  But 
 ;  we certainly might in the future, in which case
 ;  the link to the page would be found here.
-(define (authored-work-name->authored-work-card pkg-name )
+(define (authored-work-name->authored-work-card 
+          #:preview-img-path path
+          pkg-name )
   (let ()
     (define lore (dynamic-require-lore pkg-name))
 
@@ -137,15 +152,13 @@
     (authored-work-card 
       #:name (h3 name) 
       #:preview-image (img class: "card-img-top"
-		     src: (~a 
-			    "works/" (lore->name-slug lore)
-			    "/preview.png"))
+		     src: path)
 
 		(accordion-card #:header "Read More..."
 				(h5 "Rune Collections")
 				(map rune-collection-name->preview-icon 
 				  rune-collections)
-				(br)
+				(hr)
 				description)
 
 		(hr)

@@ -85,7 +85,10 @@
 
   (link-to-collection (rune-collection-lore-name lore) 
                       (img src: (~a "collections/" (lore->name-slug lore) "/preview.png")
-                           width: 50
+                           class: "col-md-4"
+                           style: (properties padding-left: "5px"
+                                              padding-right: "5px"
+                                              ) 
                            )))
 
 
@@ -177,7 +180,7 @@
   (local-require website/bootstrap/font-awesome)
   (a href: (~a "https://codespells-org.s3.amazonaws.com/StandaloneBuilds/" name "/0.0/" name ".zip")
      (button-success "Download for Windows"
-		     (fa-windows))))
+		     (i class: "fab fa-windows pl-2"))))
 
 
 (define (coming-soon)

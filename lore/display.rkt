@@ -195,7 +195,13 @@
   (rune-code-example lang input-expr output-video-path)
   (let ()
     (list
-      (typeset-runes lang input-expr)
-      (video width: "320" 'controls: #t
+      (p (b "Try This Spell:"))
+      (typeset-runes-block lang input-expr)
+      (p (b "Result:"))
+      (video width: "320"
+             'autoplay: #t
+             'loop: #t
+             'muted: #t
+             ;'controls: #t 
 	     (source src: (prefix/pathify output-video-path) type: "video/mp4")))))
 

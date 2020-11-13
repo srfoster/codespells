@@ -157,7 +157,7 @@
       #:preview-image (img class: "card-img-top"
 		     src: path)
 
-		(accordion-card #:header "Read More..."
+		(accordion-card #:header "Learn More..."
 				(h5 "Rune Collections")
 				(map rune-collection-name->preview-icon 
 				  rune-collections)

@@ -131,7 +131,6 @@
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/demo-world/0.0/CodeSpellsDemoWorld.zip"
    "CodeSpellsDemoWorld"
-   560 ;It's about 558.8 Megabytes, I think
    ))
 
 ;TODO: Move to new package
@@ -139,25 +138,29 @@
 (define (voxel-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/voxel-world/0.0/VoxelWorld.zip"
-   "VoxelWorld"
-   606))
+   "VoxelWorld"))
+
+;TODO: Move to new package
+(provide log-cabin-world)
+(define (log-cabin-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/log-cabin-world/0.0/LogCabinWorld.zip"
+   "LogCabinWorld"))
 
 ;TODO: Move to new package
 (provide cave-world)
 (define (cave-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/cave-world/0.0/CaveWorld.zip"
-   "CaveWorld"
-   606))
+   "CaveWorld"))
 
 (provide arena-world)
 (define (arena-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/arena-world/0.0/ArenaWorld.zip"
-   "ArenaWorld"
-   1400))
+   "ArenaWorld"))
 
-(define (fetch-and-run-world world-installation-source world-name size-in-mb)
+(define (fetch-and-run-world world-installation-source world-name)
   (local-require file/unzip net/sendurl)
 
   (define zip-file-name (last (string-split world-installation-source "/")))
@@ -173,7 +176,6 @@
 
       (dl world-installation-source
         (build-path (codespells-workspace) zip-file-name)
-        size-in-mb
         ))
 
     (when (not (directory-exists? world-installation-target))

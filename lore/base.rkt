@@ -12,6 +12,9 @@
   dynamic-require-lore)
 
 (require website-js racket/runtime-path)
+(require syntax/parse/define
+	 (for-syntax racket/format
+		     racket/list))
 
 ;Underlying structures for lore (aka documentation)
 
@@ -43,21 +46,82 @@
       (authored-work-lore
 	name description preview-image rune-collections))))
 
-(define-syntax-rule 
-  (define-rune-collection-lore 
-    #:name name
-    #:description description
-    #:rune-lores rune-lores
-    #:preview-image preview-image)
-  (begin
-    (provide lore)
-    (define lore
-      (rune-collection-lore
-	name description preview-image rune-lores ))))
+(define-syntax 
+  (define-rune-collection-lore stx)
+
+  (syntax-parse 
+    stx
+    [(_
+       #:name name
+       #:description description
+       #:rune-lores rune-lores
+       #:preview-image preview-image)
+     #`(begin
+	 #,(define-media-from stx "images")
+
+	 (provide lore)
+	 (define lore
+	   (rune-collection-lore
+	     name description preview-image rune-lores )))]))
 
 ;A constructor with keywords, for better readability in constructing rune lores
 (define (make-rune-lore #:name name
 			#:rune rune
 			#:description description)
   (rune-lore name description rune))
+
+
+(define-for-syntax 
+  (define-media-from stx path)
+  (define dir
+    (apply build-path
+	   (append
+	     (drop-right (explode-path (syntax-source stx)) 1)
+	     (list path))))
+
+  (define files
+    (directory-list dir))
+
+  (define defs
+    (map
+      (lambda (f)
+	;For each thing in path...
+	; Define a media page and a website path
+	(define-media-file stx 
+			   dir 
+			   (string->symbol (~a f))) )  
+      files))
+
+  #`(begin 
+      #,(datum->syntax stx '(provide media))
+      #,(datum->syntax stx '(define media
+			      (list )))
+
+      #,@defs
+      ))
+
+(define-for-syntax 
+  (define-media-file ctx file-dir file-name) 
+  (datum->syntax
+    ctx
+    `(begin
+       (define ,file-name
+	 (list
+	   "rune-collection-media" (~a (length media)) 
+	   (~a ',file-name)))
+
+       (let ()
+	 (define media-page
+	   (page (identity ,file-name)
+		 (build-path ,(~a file-dir "/" file-name))
+		 #;
+		 (apply build-path 
+			(flatten
+			  (list
+			    ,file-dir
+			    ,file-name)))))
+
+	 (set! media
+	   (cons media-page media))))))
+
 

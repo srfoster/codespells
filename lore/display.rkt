@@ -23,7 +23,9 @@
 
 	 authored-work-card
 	 download-button
-	 coming-soon)
+	 coming-soon
+	 
+	 rune-code-example)
 
 ;Useful for creating URLs
 (define (lore->name-slug lore)
@@ -184,4 +186,13 @@
   (alert-primary "Coming soon!"))
 
 
+
+(require codespells-runes)
+(define-syntax-rule 
+  (rune-code-example lang input-expr output-video-path)
+  (let ()
+    (list
+      (typeset-runes lang input-expr)
+      (video width: "320" 'controls: #t
+	     (source src: (prefix/pathify output-video-path) type: "video/mp4")))))
 

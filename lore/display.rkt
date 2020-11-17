@@ -52,7 +52,6 @@
 
 ;Generate a rune collection preview card from the name
 (define (rune-collection-name->rune-collection-card 
-          #:preview-img-path path
           module-name)
   (define module-name/lore (string->symbol
 			     (~a module-name "/lore")))
@@ -69,7 +68,7 @@
   (card 
     (card-header
       (img class: "card-img-top"
-           src: path))   
+           src: (prefix/pathify preview)))   
     (card-body
       (link-to-collection name) 
       ))
@@ -86,7 +85,7 @@
     (dynamic-require module-name/lore 'lore))
 
   (link-to-collection (rune-collection-lore-name lore) 
-                      (img src: (~a "collections/" (lore->name-slug lore) "/preview.png")
+                      (img src: (prefix/pathify (rune-collection-lore-preview-image lore)) 
                            class: "col-md-4"
                            style: (properties padding-left: "5px"
                                               padding-right: "5px"
@@ -140,7 +139,7 @@
 ;  we certainly might in the future, in which case
 ;  the link to the page would be found here.
 (define (authored-work-name->authored-work-card 
-          #:preview-img-path path
+         ; #:preview-img-path path
           pkg-name )
   (let ()
     (define lore (dynamic-require-lore pkg-name))
@@ -157,8 +156,7 @@
     (authored-work-card 
       #:name (h3 name) 
       #:preview-image (img class: "card-img-top"
-		     src: path)
-
+		     src: (prefix/pathify preview-image))
 		(accordion-card #:header "Learn More..."
 				(h5 "Rune Collections")
 				(map rune-collection-name->preview-icon 

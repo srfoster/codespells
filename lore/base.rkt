@@ -34,17 +34,24 @@
 (struct authored-work-lore   (name description preview-image rune-collection-names) #:transparent)
 
 ;Some convenient macros for defining/providing lores
-(define-syntax-rule 
-  (define-authored-work-lore 
-    #:name name
-    #:description description
-    #:rune-collections rune-collections
-    #:preview-image preview-image)
-  (begin
-    (provide lore)
-    (define lore
-      (authored-work-lore
-	name description preview-image rune-collections))))
+(define-syntax
+  (define-authored-work-lore stx)
+
+  (syntax-parse
+    stx
+    [(_ 
+       #:name name
+       #:description description
+       #:rune-collections rune-collections
+       #:preview-image preview-image)
+     #`(begin
+         #,(define-media-from stx "images")
+         (provide lore)
+         (define lore
+           (authored-work-lore
+             name description preview-image rune-collections)))]
+    )
+  )
 
 (define-syntax 
   (define-rune-collection-lore stx)
@@ -100,6 +107,18 @@
       #,@defs
       ))
 
+(provide next-media-id)
+(define
+  (next-media-id)
+  (set! media-id (add1 media-id))
+  media-id
+  )
+
+(define
+  media-id
+  0
+  )
+
 (define-for-syntax 
   (define-media-file ctx file-dir file-name) 
   (datum->syntax
@@ -107,7 +126,7 @@
     `(begin
        (define ,file-name
 	 (list
-	   "rune-collection-media" (~a (length media)) 
+	   "lore-media" (~a (next-media-id)) 
 	   (~a ',file-name)))
 
        (let ()

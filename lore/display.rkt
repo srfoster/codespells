@@ -139,8 +139,10 @@
 ;  we certainly might in the future, in which case
 ;  the link to the page would be found here.
 (define (authored-work-name->authored-work-card 
-         ; #:preview-img-path path
-          pkg-name )
+          pkg-name
+          #:download-section [download-section 
+                               (download-button (~a pkg-name))]
+          )
   (let ()
     (define lore (dynamic-require-lore pkg-name))
 
@@ -167,7 +169,7 @@
 		(hr)
 
 		;Change on s3
-		(download-button (~a pkg-name)))))
+		download-section)))
 
 
 (define (authored-work-card #:name title #:preview-image img . content)

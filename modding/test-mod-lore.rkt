@@ -11,5 +11,5 @@
   }
   #:rune-lores
   (list)
-  #:preview-image (hello-rune))
+  #:preview-image preview.png)
 

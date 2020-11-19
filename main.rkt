@@ -148,6 +148,13 @@
    "LogCabinWorld"))
 
 ;TODO: Move to new package
+(provide forest-world)
+(define (forest-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/forest-world/0.0/ForestWorld.zip"
+   "ForestWorld"))
+
+;TODO: Move to new package
 (provide cave-world)
 (define (cave-world)
   (fetch-and-run-world

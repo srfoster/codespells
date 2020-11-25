@@ -94,6 +94,16 @@
                              mod-name
                              blueprint-name)
   (displayln (~a "Loading BP from" mod-folder))
+
+  ;It's an open question whether we should return a thunk here.
+  ; Functions to unreal-js fragments are useful because other runes can control their
+  ; behavior with parameters like with (at ...).
+  
+  ;  But simple runes e.g. (gnarly-rock) are usually used without parens,
+  ;So they are passed as functions anyway.
+
+  ;But what if we augment the rune with parameters? I.e. (gnarly-rock #:version 1)?
+  ;  Maybe in this case, when there are parameters, it can return a thunk
   (unreal-js
    @~a{
        (function(){

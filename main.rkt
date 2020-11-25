@@ -134,6 +134,27 @@
    ))
 
 ;TODO: Move to new package
+(provide temple-world)
+(define (temple-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/temple-world/0.0/TempleWorld.zip"
+   "TempleWorld"))
+
+;TODO: Move to new package
+(provide village-world)
+(define (village-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/village-world/0.0/VillageWorld.zip"
+   "VillageWorld"))
+
+;TODO: Move to new package
+(provide polar-facility-world)
+(define (polar-facility-world)
+  (fetch-and-run-world
+   "https://codespells-org.s3.amazonaws.com/WorldTemplates/polar-facility-world/0.0/PolarFacilityWorld.zip"
+   "PolarFacilityWorld"))
+
+;TODO: Move to new package
 (provide voxel-world)
 (define (voxel-world)
   (fetch-and-run-world

@@ -13,12 +13,45 @@
 
 (define (setup-demo-aether)
   (unreal-eval-js @~a{
-    functions.teleport = function(location){
-      var cc = GWorld.GetAllActorsOfClass(Root.ResolveClass('Avatar')).OutActors[0];
-      cc.SetActorLocation(location)
-    }}))
+ functions.teleport = function(location){
+  var cc = GWorld.GetAllActorsOfClass(Root.ResolveClass('Avatar')).OutActors[0];
+  cc.SetActorLocation(location);
+ }
 
+ functions.browserWindow = function(id, url){                                       
+  var widget = widgets[id];
+  
+  if(!widget){
+   widget = GWorld.CreateWidget(WB_TextSpellcrafting_C, GWorld.GetPlayerController(0));
+   widget.WebBrowser_309.InitialURL = url;
+   widget.AddToViewport();
+   widgets[id] = widget;
+  }
 
+  widget.SetVisibility(ESlateVisibility.Visible);
+  var control = GWorld.GetPlayerController(0);
+  control.SetInputMode_UIOnly();
+  control.bShowMouseCursor = true;                                 
+ }
+
+ })
+
+  
+  (unreal-eval-js @~a{
+ class MyIH extends Root.ResolveClass("InputHelper") {
+  HandleKeyPressed(key) {
+   if(key.KeyName == 'C'){
+    functions.browserWindow("editor", "http://localhost:8081/editor");          
+   }
+  }
+ } 
+
+ let MyIH_C = require('uclass')()(global,MyIH);
+ new MyIH_C(GWorld);
+ })
+  (unreal-eval-js @~a{
+      functions.browserWindow("welcome", "http://localhost:8081/");     
+    }))
 
 
 (define (demo-aether-lang)

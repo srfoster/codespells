@@ -1,5 +1,6 @@
 
 var functions = {} //Global, so more functions can be defined via eval
+var widgets = {}
 
 //It's a philosophical question whether this should be part of the core/minimal Unreal runtime.
 //  Might want to move it to some kind of "modding framework" module and have it evaled in by some Racket module.

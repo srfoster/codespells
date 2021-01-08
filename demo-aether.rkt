@@ -23,6 +23,7 @@
   
   if(!widget){
    widget = GWorld.CreateWidget(WB_TextSpellcrafting_C, GWorld.GetPlayerController(0));
+   console.log(widget);
    widget.WebBrowser_309.InitialURL = url;
    widget.AddToViewport();
    widgets[id] = widget;

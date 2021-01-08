@@ -97,6 +97,9 @@
 (define-runtime-path demo-lore.rkt
   "test-mod-lore.rkt")
 
+(define-runtime-path demo-.gitignore
+  "demo-gitignore")
+
 (define (copy-file-with-replacements from to mod-name)
 
   (copy-file from to #t)
@@ -127,5 +130,11 @@
   (copy-file-with-replacements 
     demo-lore.rkt
     (build-path root "lore.rkt")
-    mod-name))
+    mod-name)
+
+  (copy-file-with-replacements
+   demo-.gitignore
+   (build-path root ".gitignore")
+   mod-name)
+  )
 

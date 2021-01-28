@@ -13,7 +13,7 @@ functions.bpFromMod = function(dir,mod_name,blueprint_name){
 
                            var ret = ml.ClassFromMod(dir,mod_name,blueprint_name)
 
-                           class BP extends ret.Class {}
+                           class BP extends ret.Class { }
 
                            let ret_C = require('uclass')()(global,BP)
 
@@ -42,17 +42,30 @@ function main(){
        conn.SendResponse(resp)
 
      }
+     GetUnrealServerPort(){
+       return {Port: +KismetSystemLibrary.GetCommandLine().match(/-unreal-server=(\d+)/)[1]};
+     }
+     GetCodeSpellsServerPort(){
+       return {Port: +KismetSystemLibrary.GetCommandLine().match(/-codespells-server=(\d+)/)[1]};
+     }
   }
 
-  let MyServer_C = require('uclass')()(global,MyServer)
-  let s = new MyServer_C(GWorld,{X:7360.0,Y:3860.0,Z:7296.0},{Yaw:180})
-  console.log("JS Server started!")
+  let MyServer_C = require('uclass')()(global,MyServer);
+  let s = new MyServer_C(GWorld,{X:7360.0,Y:3860.0,Z:7296.0},{Yaw:180});
+  console.log("JS Server started!", s.GetUnrealServerPort().Port);
+
+  if(GWorld.IsServer()){
+  var t = {Translation: {X:0, Y:0, Z:0}};
+  var r = ReplicationManager_C.C(GWorld.BeginSpawningActorFromClass(ReplicationManager_C,t,false));
+  r.SetReplicates(true);
+  r.FinishSpawningActor(t);
+  r.Confirm();
+  }
 
   // clean up the mess
   return function () {
     s.DestroyActor()
   }
-
 }
 
 // bootstrap to initiate live-reloading dev env.

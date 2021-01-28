@@ -1,7 +1,9 @@
 #lang at-exp racket
 
-
 (provide once-upon-a-time
+         extra-unreal-command-line-args
+         multiplayer
+         
          demo-aether
          current-file-name ;helps with simple mods
          codespells-workspace
@@ -18,12 +20,16 @@
 (module reader syntax/module-reader
   codespells/main)
 
+(define multiplayer (make-parameter #f))
+
+(define extra-unreal-command-line-args (make-parameter ""))
 
 (define (once-upon-a-time #:aether aether #:world world)
   (displayln "Starting World and Aether")
   
   (world)
-  (aether) 
+  (parameterize ([running-as-multiplayer-server? (eq? 'server (multiplayer))])
+   (aether))
   
   (let loop ()
     (sleep 1)
@@ -88,8 +94,13 @@
 
 (define-runtime-path js-runtime "./js/on-start.js")
 
-
-
+;TODO: Move to server/in-game?? (Refactor that?)
+;TODO: Split to x/z/y
+(provide with-scale)
+(define current-scale (make-parameter 1))
+(define-syntax-rule (with-scale n lines ...)
+  (parameterize ([current-scale n])
+    lines ...))
 (define (spawn-mod-blueprint mod-folder
                              mod-name
                              blueprint-name)
@@ -104,6 +115,32 @@
 
   ;But what if we augment the rune with parameters? I.e. (gnarly-rock #:version 1)?
   ;  Maybe in this case, when there are parameters, it can return a thunk
+
+
+  ;Does ModLoader need to be "Owned" by the player controller on the server?
+  (unreal-js
+   @~a{
+ (function(){
+  var ccs = GWorld.GetAllActorsOfClass(Root.ResolveClass('Avatar')).OutActors;
+  var ret = ccs.filter((c)=>c.IsLocallyControlled())[0]
+  .SpellReplicationComponent
+  .ObjectFromMod(
+  "@(string-replace (path->string mod-folder)
+                    "\\"
+                    "\\\\")/",
+  "@mod-name",
+  "@blueprint-name", 
+  {Translation: {X: @(current-x), Y: @(current-z), Z: @(current-y)},
+   Scale3D: {X: @(current-scale), Y: @(current-scale), Z: @(current-scale)},
+   Rotation: {Roll: 0, Pitch: 0, Yaw: 0}});
+
+  console.log("ret", Object.keys(ret), "@blueprint-name")
+  
+  return ret.Object;
+  })()
+ })
+  
+  #;
   (unreal-js
    @~a{
        (function(){
@@ -114,9 +151,9 @@
                                    "@blueprint-name")
 
        var o = new C(GWorld,{X:@(current-x), Y:@(current-z), Z:@(current-y)},
-                            {Roll:@(current-roll), Pitch:@(current-pitch), Yaw:@(current-yaw)})
-
-       return o
+                            {Roll:@(current-roll), Pitch:@(current-pitch), Yaw:@(current-yaw)});
+      
+       return o;
        })()
    }))
 
@@ -141,6 +178,7 @@
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/demo-world/0.0/CodeSpellsDemoWorld.zip"
    "CodeSpellsDemoWorld"
+   "Minimal_Default"
    ))
 
 ;TODO: Move to new package
@@ -196,9 +234,10 @@
 (define (arena-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/arena-world/0.0/ArenaWorld.zip"
-   "ArenaWorld"))
+   "ArenaWorld"
+   "DemoMap1"))
 
-(define (fetch-and-run-world world-installation-source world-name)
+(define (fetch-and-run-world world-installation-source world-name [map-name #f])
   (local-require file/unzip net/sendurl)
 
   (define zip-file-name (last (string-split world-installation-source "/")))
@@ -221,8 +260,8 @@
       (unzip (build-path (codespells-workspace) zip-file-name))
       (rename-file-or-directory
        (build-path (current-directory) world-name)
-       world-installation-target) )
-
+       world-installation-target))
+    
     (copy-file js-runtime
                (build-path (codespells-workspace)
                            world-name
@@ -232,8 +271,21 @@
                            "on-start.js")
                #t)
 
-    (define exe (~a (build-path world-installation-target (~a world-name ".exe" )
-                                )))
+    (define multiplayer-command-line
+      (if (not (multiplayer))
+          ""
+          (if (not map-name)
+              (error (~a "No map name is set for " world-name))
+              (if (eq? (multiplayer) 'client)
+                  "127.0.0.1"
+                  (~a map-name "?listen")))))
+    
+    (define exe (~a (build-path world-installation-target (~a world-name ".exe"))
+                    " " multiplayer-command-line
+                    " -unreal-server=" (unreal-server-port)
+                    " -codespells-server=" (codespells-server-port)
+                    " " (extra-unreal-command-line-args)
+                    ))
     (displayln (~a "Running " exe)) ;Assume Windows for now
 
     (thread (thunk (system exe)))

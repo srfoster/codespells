@@ -5,7 +5,8 @@
          demo-aether-lang
          teleport)
 
-(require codespells-server/unreal-client
+(require codespells-server/lang
+         codespells-server/unreal-client
          codespells-server/in-game-lang)
 
 (define (teleport)
@@ -42,7 +43,7 @@
  class MyIH extends Root.ResolveClass("InputHelper") {
   HandleKeyPressed(key) {
    if(key.KeyName == 'C'){
-    functions.browserWindow("editor", "http://localhost:8081/editor");          
+    functions.browserWindow("editor", "http://localhost:@(codespells-server-port)/editor");          
    }
   }
  } 
@@ -51,7 +52,7 @@
  new MyIH_C(GWorld);
  })
   (unreal-eval-js @~a{
-      functions.browserWindow("welcome", "http://localhost:8081/");     
+      functions.browserWindow("welcome", "http://localhost:@(codespells-server-port)/");     
     }))
 
 

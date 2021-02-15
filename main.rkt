@@ -3,22 +3,28 @@
 (provide once-upon-a-time
          extra-unreal-command-line-args
          multiplayer
+         server-ip-address
          
          demo-aether
          current-file-name ;helps with simple mods
          codespells-workspace
          (all-from-out racket
                        codespells-server
-                       codespells-server/unreal-client
+                       codespells-server/unreal-js/unreal-client
                        codespells-runes codespells/demo-aether)
          define-runtime-path
+         spawn-mod-blueprint ;should this file be providing this?
          #%module-begin)
 
-(require codespells/demo-aether codespells-runes
+(require codespells/demo-aether
+         codespells-runes
+         codespells-server/unreal-js/util
          (rename-in racket [#%module-begin #%old-module-begin]))
 
 (module reader syntax/module-reader
   codespells/main)
+
+(define server-ip-address (make-parameter "127.0.0.1"))
 
 (define multiplayer (make-parameter #f))
 
@@ -86,91 +92,13 @@
 ;TODO: Probably time to move this world stuff to a new file, if not a codespells-worlds repo
 ; Essentially a new module evolving below this line...
 
-(provide demo-world spawn-mod-blueprint )
+(provide demo-world)
 
 (require racket/runtime-path
          codespells-server
-         codespells-server/unreal-client)
+         codespells-server/unreal-js/unreal-client)
 
 (define-runtime-path js-runtime "./js/on-start.js")
-
-;TODO: Move to server/in-game?? (Refactor that?)
-;TODO: Split to x/z/y
-(provide with-scale)
-(define current-scale (make-parameter 1))
-(define-syntax-rule (with-scale n lines ...)
-  (parameterize ([current-scale n])
-    lines ...))
-(define (spawn-mod-blueprint mod-folder
-                             mod-name
-                             blueprint-name)
-  (displayln (~a "Loading BP from" mod-folder))
-
-  ;It's an open question whether we should return a thunk here.
-  ; Functions to unreal-js fragments are useful because other runes can control their
-  ; behavior with parameters like with (at ...).
-  
-  ;  But simple runes e.g. (gnarly-rock) are usually used without parens,
-  ;So they are passed as functions anyway.
-
-  ;But what if we augment the rune with parameters? I.e. (gnarly-rock #:version 1)?
-  ;  Maybe in this case, when there are parameters, it can return a thunk
-
-
-  ;Does ModLoader need to be "Owned" by the player controller on the server?
-  (unreal-js
-   @~a{
- (function(){
-  var ccs = GWorld.GetAllActorsOfClass(Root.ResolveClass('Avatar')).OutActors;
-  var ret = ccs.filter((c)=>c.IsLocallyControlled())[0]
-  .SpellReplicationComponent
-  .ObjectFromMod(
-  "@(string-replace (path->string mod-folder)
-                    "\\"
-                    "\\\\")/",
-  "@mod-name",
-  "@blueprint-name", 
-  {Translation: {X: @(current-x), Y: @(current-z), Z: @(current-y)},
-   Scale3D: {X: @(current-scale), Y: @(current-scale), Z: @(current-scale)},
-   Rotation: {Roll: 0, Pitch: 0, Yaw: 0}});
-
-  console.log("ret", Object.keys(ret), "@blueprint-name")
-  
-  return ret.Object;
-  })()
- })
-  
-  #;
-  (unreal-js
-   @~a{
-       (function(){
-       var C = functions.bpFromMod("@(string-replace (path->string mod-folder)
-                                                     "\\"
-                                                     "\\\\")/",
-                                   "@mod-name",
-                                   "@blueprint-name")
-
-       var o = new C(GWorld,{X:@(current-x), Y:@(current-z), Z:@(current-y)},
-                            {Roll:@(current-roll), Pitch:@(current-pitch), Yaw:@(current-yaw)});
-      
-       return o;
-       })()
-   }))
-
-
-#; ;Just retaining as example of requests from JS. Not useful as a log.  Move elsewhere
-(define (log s) ; Could also just pipe in the Unreal logs, might be more useful...
-  @unreal-js{
-    (function(){
-    let request = require('request')
-    return request("POST","http://localhost:8081/eval-spell?lang=racket&spell=(displayln \""+@|s|+"\")", {})
-    })()      
- })
-
-
-
-
-
 
 (define codespells-workspace (make-parameter (current-directory)))
 
@@ -186,49 +114,57 @@
 (define (temple-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/temple-world/0.0/TempleWorld.zip"
-   "TempleWorld"))
+   "TempleWorld"
+   "DemoMap3"))
 
 ;TODO: Move to new package
 (provide village-world)
 (define (village-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/village-world/0.0/VillageWorld.zip"
-   "VillageWorld"))
+   "VillageWorld"
+   "AdvancedVillagePack_Showcase"))
 
 ;TODO: Move to new package
 (provide polar-facility-world)
 (define (polar-facility-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/polar-facility-world/0.0/PolarFacilityWorld.zip"
-   "PolarFacilityWorld"))
+   "PolarFacilityWorld"
+   "PolarFacilityMap"))
 
 ;TODO: Move to new package
 (provide voxel-world)
 (define (voxel-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/voxel-world/0.0/VoxelWorld.zip"
-   "VoxelWorld"))
+   "VoxelWorld"
+   "VoxelWorld"
+   ))
 
 ;TODO: Move to new package
 (provide log-cabin-world)
 (define (log-cabin-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/log-cabin-world/0.0/LogCabinWorld.zip"
-   "LogCabinWorld"))
+   "LogCabinWorld"
+   "Demonstration_Map"))
 
 ;TODO: Move to new package
 (provide forest-world)
 (define (forest-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/forest-world/0.0/ForestWorld.zip"
-   "ForestWorld"))
+   "ForestWorld"
+   "Demo_Scene"))
 
 ;TODO: Move to new package
 (provide cave-world)
 (define (cave-world)
   (fetch-and-run-world
    "https://codespells-org.s3.amazonaws.com/WorldTemplates/cave-world/0.0/CaveWorld.zip"
-   "CaveWorld"))
+   "CaveWorld"
+   "LV_Soul_Cave"))
 
 (provide arena-world)
 (define (arena-world)
@@ -277,7 +213,7 @@
           (if (not map-name)
               (error (~a "No map name is set for " world-name))
               (if (eq? (multiplayer) 'client)
-                  "127.0.0.1"
+                  (server-ip-address)
                   (~a map-name "?listen")))))
     
     (define exe (~a (build-path world-installation-target (~a world-name ".exe"))
@@ -413,7 +349,8 @@
 
          (require
            (prefix-in name: (only-in name my-mod-lang))
-           (except-in name my-mod-lang)))]))
+           (except-in name my-mod-lang)
+           ))]))
 
 
 (provide mod)

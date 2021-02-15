@@ -6,8 +6,8 @@
          teleport)
 
 (require codespells-server/lang
-         codespells-server/unreal-client
-         codespells-server/in-game-lang)
+         codespells-server/unreal-js/unreal-client
+         )
 
 (define (teleport)
   (unreal-eval-js @~a{functions.teleport({X: @(current-x),Y:@(current-z),Z:@(current-y)})}))

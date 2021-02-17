@@ -38,6 +38,16 @@
 
  })
 
+  (displayln @~a{
+    modDirectories["FireParticles"] = "@(string-replace (path->string (where-is-pak-folder "FireParticles"))
+                    "\\"
+                    "\\\\")/";
+ })
+  (unreal-eval-js @~a{
+    modDirectories["FireParticles"] = "@(string-replace (path->string (where-is-pak-folder "FireParticles"))
+                    "\\"
+                    "\\\\")/";
+ })
   
   (unreal-eval-js @~a{
  class MyIH extends Root.ResolveClass("InputHelper") {
@@ -55,6 +65,21 @@
       functions.browserWindow("welcome", "http://localhost:@(codespells-server-port)/");     
     }))
 
+
+(define (to-kebab-case mod-name)
+  (substring
+   (string-downcase (regexp-replace* #px"([A-Z])" (~a mod-name) "-\\1"))
+   1))
+
+(define (where-is-pak-folder mod-name)
+  (define mod-name/mod-info (string->symbol (~a (to-kebab-case mod-name) "/mod-info")))
+
+  (define pak-folder (dynamic-require mod-name/mod-info 'pak-folder)
+    #;(if (running-as-multiplayer-server?)
+                      (dynamic-require mod-name/mod-info 'pak-folder)
+                      (build-path "C:\\Users\\Administrator\\Desktop\\BuildUnreal/WindowsNoEditor/FireParticles/Content/Paks/")))
+
+  pak-folder)
 
 (define (demo-aether-lang)
   (local-require codespells-runes 2htdp/image)

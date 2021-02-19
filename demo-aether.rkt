@@ -38,17 +38,6 @@
 
  })
 
-  (displayln @~a{
-    modDirectories["FireParticles"] = "@(string-replace (path->string (where-is-pak-folder "FireParticles"))
-                    "\\"
-                    "\\\\")/";
- })
-  (unreal-eval-js @~a{
-    modDirectories["FireParticles"] = "@(string-replace (path->string (where-is-pak-folder "FireParticles"))
-                    "\\"
-                    "\\\\")/";
- })
-  
   (unreal-eval-js @~a{
  class MyIH extends Root.ResolveClass("InputHelper") {
   HandleKeyPressed(key) {
@@ -103,15 +92,17 @@
                              (circle 20 'solid 'black)
                              (circle 25 'solid 'green)))))))))
 
-
 (define (demo-aether #:lang [aether-lang (demo-aether-lang)]
                      #:setup [more-aether-setup (thunk* (void))])
   (lambda ()
     (local-require codespells-server)
-    (displayln "Starting Demo Aether")
+    (displayln "************************Starting Demo Aether")
 
     (setup-demo-aether)
     (more-aether-setup)
+    (map (lambda (f)
+	   
+	   (f)) mod-setups)
 
     ;Start the server with the appropriate Runes -- Just the teleport rune for now
     (parameterize

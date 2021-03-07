@@ -211,12 +211,12 @@
       (if (not (multiplayer))
           ""
           (if (not map-name)
-              (error (~a "No map name is set for " world-name))
+              (error (~s "No map name is set for " world-name))
               (if (eq? (multiplayer) 'client)
                   (server-ip-address)
                   (~a map-name "?listen")))))
     
-    (define exe (~a (build-path world-installation-target (~a world-name ".exe"))
+    (define exe (~a (build-path world-installation-target (~s world-name ".exe"))
                     " " multiplayer-command-line
                     " -unreal-server=" (unreal-server-port)
                     " -codespells-server=" (codespells-server-port)
@@ -373,4 +373,3 @@
                            (define-runtime-path main.rkt "main.rkt")
                            (define-runtime-path MyPak ,(syntax->datum #'pak-folder-name))
                            ))]))
-

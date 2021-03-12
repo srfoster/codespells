@@ -1,4 +1,19 @@
 
+/*
+//console.log("CONTEXT: ",Context.ReadStringFromFile) //("S:\\CodeSpellsMods\\ycombinator-demos\\chess-test.js"))
+
+console.log("ON START!!!!!!!!!!!!!!!!!!!!!")
+console.log("Context: ", Context)
+console.log("Context keys: ", Object.keys(Context))
+console.log("CONTEXT read string: ",Context.ReadStringFromFile)
+
+console.log("CONTEXT run file: ",Context.RunFile)
+
+var test = require("S:\\CodeSpellsMods\\ycombinator-demos\\chess-test.js")
+console.log(test)
+*/
+
+
 var functions = {} //Global, so more functions can be defined via eval
 var widgets = {}
 var modDirectories = {}
@@ -66,6 +81,7 @@ function main(){
 // bootstrap to initiate live-reloading dev env.
 try {
     module.exports = () => {
+
         let cleanup = null
 
         // wait for map to be loaded.

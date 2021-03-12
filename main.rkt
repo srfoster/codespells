@@ -216,7 +216,7 @@
                   (server-ip-address)
                   (~a map-name "?listen")))))
     
-    (define exe (~a (build-path world-installation-target (~a world-name ".exe"))
+    (define exe (~a (~s (~a(build-path world-installation-target (~a world-name ".exe"))))
                     " " multiplayer-command-line
                     " -unreal-server=" (unreal-server-port)
                     " -codespells-server=" (codespells-server-port)
